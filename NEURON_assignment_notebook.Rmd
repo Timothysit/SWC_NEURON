@@ -256,7 +256,8 @@ plt.ylabel('Time constant (ms)')
 
 plt.show() 
 ```
-Indeed we observe that the $R_i$ decreases with increasing diameter
+Indeed we observe that the $R_i$ decreases with increasing diameter.
+When we increase the diameter the capacitance of the cell increases proportionally, however the input resistance decreases (as shown above) which means that the time constant (which is the product of membrane capacitance and resistance) is unaffected.
 ### Varying multiple variables simultaneously
 
 We iterate through each of these list, running our simulations and calculating input resistance and time constants as above.
