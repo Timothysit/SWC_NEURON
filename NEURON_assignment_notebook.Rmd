@@ -63,7 +63,7 @@ os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = "/home/timothysit/anaconda3/envs/NEU
 
 ## Make a ball model and measure $R_i$, $m_\tau$ with current injection 
 
-We first define the function for creating a cell, injecting current, and recording voltage over time.
+We first define a function which injects current into a cell with passive properties, whilst recording voltage. The function returns the recorded voltage and time vectors.
 
 ```{python}
 from neuron import h, gui
@@ -125,7 +125,7 @@ def inject_current(cell, somaLength = 12.54, somaDiam = 12.54,
     return voltage, time
 ```
 
-We define a function to calculate the input resistance ($R_i$), from our cell recording using 
+We define a function (using Ohms law) which allows us to calculate the input resistance ($R_i$) from our cell recording using the returned voltage vector.
 
 $$
 R_i = \frac{\Delta V}{\Delta I_e}
@@ -165,6 +165,7 @@ def cal_TauM(voltage, time, stimDelay = 10):
     return TauM
 ```
 
+We run our current injection function on a cell which only contains a soma. According to the default settings of our function the soma diameter and length are the same, creating a ball. Below is a plot of the voltage recorded during current injection into our ball model.
 
 ```{python, fig.width=10, fig.height = 7}
 voltage, time = inject_current(cell = h.Section(name='soma'))
@@ -187,13 +188,14 @@ print('Input resistance is %.2f Mohms' % (input_resistance / 10**6))
 TauM = cal_TauM(voltage, time)
 print('TauM is %.2f ms' % TauM)
 ```
-Due to the cells small size the input resistance is greater than we would normally expect. During our in vitro experiments this week we measured our input resistance to be around 5 Mohms.  
+Due to the cells small size the input resistance is greater than we would normally expect. During our in vitro experiments this week we measured our input resistance to be around 5 Mohms. Equally, the time constant differs from our experimental observations (in our experiment the time constant ~20 ms). This is because the time constant is a product of the resistance and capacitance of the cell, and the membrane capacitance is proportional to the amount of membrane.
 
 
 ## Varying neuron variables
 
 Change diameter, $R_m$, $R_a$, $C_m$ and see how it affects $R_i$ and $m_\tau$
 
+We generate lists containing different values for the above mentioned variables. We first show how changes in diameter length effect the recorded voltage and then the effects of diameter on $R_i$ and $m_\tau$.
 ```{python, fig.width=10, fig.height = 7}
 g_list = [0.001, 0.01, 0.1, 1, 10]
 Ra_list = [10, 20, 30, 40, 50] # default is 35.4 
@@ -233,7 +235,9 @@ plt.legend(frameon=False, title = 'Diameter ($\mu$m)')
 plt.show()
 ```
 
-### Variation of input resistance and time constant with diameter 
+From the above plot we can see that the voltage change following current injection is larger in a cell with a smaller diameter. This also means that according to Ohms law we will expect the cell with the smallest diameter to have the largest $R_i$.
+
+### Variation of input resistance and time constant with diameter
 
 ```{python, fig.width = 15, fig.height = 7}
 import seaborn as sns 
@@ -252,8 +256,10 @@ plt.ylabel('Time constant (ms)')
 
 plt.show() 
 ```
+Indeed we observe that the $R_i$ decreases with increasing diameter
+### Varying multiple variables simultaneously
 
-### Varying multiple variables simultaneously 
+We iterate through each of these list, running our simulations and calculating input resistance and time constants as above.
 
 ```{python}
 import itertools
