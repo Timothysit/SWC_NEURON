@@ -1,12 +1,14 @@
 ---
 title: "NEURON Assignment"
-author: Sarah Olesen, Tim Sit
-toc: True
+author: "Sarah Olesen, Tim Sit"
 date: \today
 output:
-  pdf_document: 
-     number_sections: true
+  pdf_document:
+    number_sections: yes
   html_notebook: default
+  html_document:
+    df_print: paged
+toc: yes
 ---
 
 ```{r setup, include = TRUE, echo = FALSE}
@@ -95,7 +97,7 @@ def inject_current(cell, somaLength = 12.54, somaDiam = 12.54,
     cell.insert('pas')
     cell.L = somaLength 
     cell.diam = somaDiam
-    cell.g_pas = 0.001
+    cell.g_pas = g_pas
     
     if printProperties is True:
         print('Cell properties')
@@ -144,16 +146,27 @@ def cal_Ri(voltage_np, stimAmp = 0.05):
 We also define a function to calculate the membrane time constant $\tau_m$ from our recording. We are doing this by finding the time when the voltage has reached 63.2% of its peak voltage.
 
 ```{python}
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
 def cal_TauM(voltage, time, stimDelay = 10):
     # convert voltage to numpy 
     voltage_np = voltage.as_numpy()
     time_np = time.as_numpy()
     # from "experiment"
-    special_v = (max(voltage_np) - min(voltage_np)) * (1 - 1/np.e)
+    special_v = (max(voltage_np) - min(voltage_np)) * (1 - 1/np.e) # about 2/3 
+    assert(special_v > 0)
     special_vv = special_v + min(voltage_np)
+    
+    # create trimmed voltage_np to ensure find_nearest finds only 
+    # within the 'charging' curve
+    firstMaxIndex = np.where(voltage_np == max(voltage_np))
+    firstMaxIndex = firstMaxIndex[0][0]
+    voltage_np_trim = voltage_np[0:firstMaxIndex]
 
-    tauIndex = np.where(np.logical_and(voltage_np > special_vv - 0.05, 
-                                       voltage_np < special_vv + 0.05))
+    tauIndex = np.where(voltage_np_trim == find_nearest(voltage_np_trim, special_vv))
     if tauIndex[0].size > 1: # more than one matching value
         tau_m_samp = tauIndex[0][0]
     else: 
@@ -162,7 +175,7 @@ def cal_TauM(voltage, time, stimDelay = 10):
     tau_m_exp = time_np[tau_m_samp]
     TauM = tau_m_exp - stimDelay
     
-    return TauM
+    return TauM[0]
 ```
 
 We run our current injection function on a cell which only contains a soma. According to the default settings of our function the soma diameter and length are the same, creating a ball. Below is a plot of the voltage recorded during current injection into our ball model.
@@ -196,6 +209,7 @@ Due to the cells small size the input resistance is greater than we would normal
 Change diameter, $R_m$, $R_a$, $C_m$ and see how it affects $R_i$ and $m_\tau$
 
 We generate lists containing different values for the above mentioned variables. We first show how changes in diameter length effect the recorded voltage and then the effects of diameter on $R_i$ and $m_\tau$.
+
 ```{python, fig.width=10, fig.height = 7}
 g_list = [0.001, 0.01, 0.1, 1, 10]
 Ra_list = [10, 20, 30, 40, 50] # default is 35.4 
@@ -433,23 +447,43 @@ plt.show()
 # second approach 
 # holding everything else in their default values, then varying one variable 
 # use multiple y-axis for visualisation 
-Ra_default = 10 # uOhm (?)
-diam_default = 500 # uM (?)
-Cm_default = 1 # uF/cm^2 (?)
+Ra_default = 35.4 # uOhm 
+diam_default = 500 # uM 
+Cm_default = 1 # uF/cm^2 
+g_pas_default = 0.001
 
 Ra_list = [10, 20, 30, 40, 50]
 diam_list = [500, 600, 700, 800, 900]
-Cm_list = [1, 2, 3, 4, 5]
+Cm_list = [1.1, 1.2, 1.3, 1.4, 1.5]
+gpas_list = [0.001, 0.002, 0.003, 0.004, 0.005]
+
+# colormap 
+# this assumes all the list have the same length
+import matplotlib.pylab as pl
+num_color = len(Ra_list)
+colors = pl.cm.viridis(np.linspace(0,1,num_color))
+
 Ri_Ra_list = list()
 Ri_diam_list = list()
 Ri_Cm_list = list()
+Ri_gpas_list = list()
 
 mTau_Ra_list = list()
 mTau_diam_list = list()
 mTau_Cm_list = list()
+mTau_gpas_list = list()
 
+fig, ax = plt.subplots(nrows = 4, ncols = 1, figsize = (12, 20))
+fig.text(0.5, 0.04, 'Time (ms)', ha='center')
+fig.text(0.04, 0.5, 'Potential difference (mV)', ha='center', rotation = 'vertical')
+
+# ideally, the plotting should be done in Object-oriented approach instead
+
+plt.xlabel('Time (ms)')
+ax1 = plt.subplot(4, 1, 1)
+plt.title('Varying axial resistance ($\Omega$)')
 # the effect of axial resistance on input resistance and time constant
-for Ra in Ra_list:
+for Ra, n in zip(Ra_list, np.arange(num_color)):
     cell = h.Section(name = 'cell')
     cell.Ra = Ra
     diam = diam_default
@@ -458,9 +492,14 @@ for Ra in Ra_list:
 somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
     Ri_Ra_list.append(cal_Ri(voltage))
     mTau_Ra_list.append(cal_TauM(voltage, time))
-    
+    plt.plot(time, voltage, 
+    label = Ra, color = colors[n])
+    plt.legend(frameon = False)
+
+ax1 = plt.subplot(4, 1, 2)
+plt.title('Varying diameter ($\mu$m)')
 # the effect of diameter on input resistance and time constant
-for diam in diam_list:
+for diam, n in zip(diam_list, np.arange(num_color)):
     cell = h.Section(name = 'cell')
     cell.Ra = Ra_default
     diam = diam
@@ -469,10 +508,14 @@ for diam in diam_list:
 somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
     Ri_diam_list.append(cal_Ri(voltage))
     mTau_diam_list.append(cal_TauM(voltage, time))
+    plt.plot(time, voltage, 
+    label = diam, color = colors[n])
+    plt.legend(frameon = False)
 
-
+ax1 = plt.subplot(4, 1, 3)
+plt.title('Varying capacitance ($\mu$F)')
 # the effect of membrane capacitance on input resistance and time constant 
-for Cm in Cm_list:
+for Cm, n in zip(Cm_list, np.arange(num_color)):
     cell = h.Section(name = 'cell')
     cell.Ra = Ra_default
     diam = diam_default
@@ -481,7 +524,123 @@ for Cm in Cm_list:
 somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
     Ri_Cm_list.append(cal_Ri(voltage))
     mTau_Cm_list.append(cal_TauM(voltage, time))
+    plt.plot(time, voltage, 
+    label = Cm, color = colors[n])
+    plt.legend(frameon = False)
+
+ax1 = plt.subplot(4, 1, 4)
+plt.title('Varying passive conductance (S)')
+# the effect of membrane conductance (resistance) on input resistance and time constant  
+for g_pas, n in zip(gpas_list, np.arange(num_color)):
+    cell = h.Section(name = 'cell')
+    cell.Ra = Ra_default
+    diam = diam_default
+    cell.cm = Cm_default
+    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
+somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10,
+    g_pas = g_pas)
+    Ri_gpas_list.append(cal_Ri(voltage))
+    mTau_gpas_list.append(cal_TauM(voltage, time))
+    plt.plot(time, voltage, 
+    label = g_pas, color = colors[n])
+    plt.legend(frameon = False)
+
+plt.show()
 ```
+
+
+
+```{python, include = FALSE}
+# checking the effect of changing capacitance
+plt.figure()
+for Cm in Cm_list:
+    cell = h.Section(name = 'cell')
+    cell.Ra = Ra_default
+    diam = diam_default
+    cell.cm = Cm
+    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
+somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
+    plt.plot(time, voltage)
+
+plt.show()
+```
+
+
+```{python, include = FALSE}
+# checking the effect of changing conductance
+plt.figure()
+for g_pas in gpas_list:
+    cell = h.Section(name = 'cell')
+    cell.Ra = Ra_default
+    diam = diam_default
+    cell.cm = Cm_default
+    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
+somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 5,
+    g_pas = g_pas, printProperties = True)
+    plt.plot(time, voltage)
+
+plt.show()
+```
+
+
+
+```{python}
+plt.figure(figsize = (12, 20)) 
+plt.subplot(4, 2, 1)
+plt.plot(Ra_list, Ri_Ra_list)
+plt.xlabel('Axial resistance ($\Omega$)')
+plt.ylabel('Input resistance ($\Omega$)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 3)
+plt.plot(diam_list, Ri_diam_list)
+plt.xlabel('Diameter ($\mu$ m)')
+plt.ylabel('Input resistance ($\Omega$)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 5)
+plt.plot(Cm_list, Ri_Cm_list)
+plt.xlabel('Capacitance ($\mu$F)')
+plt.ylabel('Input resistance ($\Omega$)')
+# plt.ylim([1 * (10 ** 8), 2 * (10 ** 8)])
+# plt.ylim([3 * 10**6, 5 * 10**6])
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 7) 
+plt.plot(gpas_list, Ri_gpas_list)
+plt.xlabel('Passive conductance (S)')
+plt.ylabel('Input resistance ($\Omega$)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 2)
+plt.plot(Ra_list, mTau_Ra_list)
+plt.xlabel('Axial resistance ($\Omega$)')
+plt.ylabel('Time constant (ms)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 4)
+plt.plot(diam_list, mTau_diam_list)
+plt.xlabel('Diameter ($\mu$ m)')
+plt.ylabel('Time constant (ms)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 6)
+plt.plot(Cm_list, mTau_Cm_list)
+plt.xlabel('Capacitance ($\mu$F)')
+plt.ylabel('Time constant (ms)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplot(4, 2, 8) 
+plt.plot(gpas_list, mTau_gpas_list)
+plt.xlabel('Passive conductance (S)')
+plt.ylabel('Time constant (ms)')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
+plt.show()
+```
+
+
 
 
 ```{python, fig.width = 12, fig.height = 14}
@@ -698,7 +857,7 @@ sns.despine()
 plt.show()
 ```
 
-### Measure gNa and gKv as a function of current injection at the soma and plot activation curves 
+### Measure gNa and gKv as a function of current injection at the soma and plot activation and inactivation curves 
 
 We first define a function to measure the conductance at the soma.
 
@@ -785,6 +944,73 @@ def record_conductance(cell, somaLength = 12.6157, somaDiam = 12.6157,
     
     return gNa, gKv, voltage, time
 ```
+
+#### Activation curve 
+
+```{python, figure.width = 10, figure.height = 7}
+v_clamp_amp1 = -110
+v_clamp_amp2_list = np.arange(-75, 150, 25)
+
+v_clamp_dur1 = 20
+v_clamp_dur2 = 30
+
+curr_amp = 0.5
+
+gNa_measured = list()
+gKv_measured = list()
+
+# colormap 
+import matplotlib.pylab as pl
+num_color = len(v_clamp_amp2_list)
+colors = pl.cm.viridis(np.linspace(0,1,num_color))
+
+plt.figure(figsize = (20, 7))
+ax1 = plt.subplot(1, 2, 1)
+ax2 = plt.subplot(1, 2, 2)
+
+for v_clamp_amp2, n in zip(v_clamp_amp2_list, np.arange(num_color)):
+    conductance_cell = h.Section(name='conductance_cell')
+    gNa, gKv, voltage, time = record_conductance(
+    conductance_cell, stimAmp = curr_amp, vInit = v_clamp_amp2,
+    stimDelay = 10, total_time = 40,
+    v_clamp_amp1 = v_clamp_amp1, v_clamp_amp2 = v_clamp_amp2,
+    v_clamp_dur1 = v_clamp_dur1, v_clamp_dur2 = v_clamp_dur2,
+    printProperties = False)
+    # print(gNa)
+    gNa_measured.append(max(gNa))
+    gKv_measured.append(max(gKv))
+
+
+    ax1.plot(time, voltage,
+    label = v_clamp_amp2,
+             color = colors[n])
+    
+    # conductance over time 
+    ax2.plot(time, gNa,
+    label = v_clamp_amp2,
+             color = colors[n])
+
+ax1.set_title('Voltage clamp')
+ax1.set_xlabel('Time (ms)')
+ax1.set_ylabel('Voltage (mV)')
+
+ax2.set_xlabel('Time (ms)')
+ax2.set_ylabel('Conductance ($\mu$S)')
+
+plt.show()
+
+```
+
+```{python, fig.width = 10, fig.height = 7}
+plt.figure()
+ax = sns.lineplot(v_clamp_amp2_list, gKv_measured)
+ax.set(xlabel = 'Potential differrence (V)', ylabel = 'Peak conductance ($\mu$S)')
+plt.show()
+```
+
+
+
+#### Inactivation curve
 
 ```{python, figure.width = 10, figure.height = 7}
 # Vm_list = [-70, -60, -50, -40, -30]
