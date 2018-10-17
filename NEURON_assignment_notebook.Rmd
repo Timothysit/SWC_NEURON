@@ -555,7 +555,14 @@ plt.show()
 
 ```
 
-
+When we had a ball model the capacitance and membrane resistance perfectly cancelled each others effect out as diameter increased.
+When we add dendrites we again observe that increased diameter decreases input resistance.
+However as opposed to before increasing the diameter now increases the time constant.
+This is because the increase in capacitance is greater than the decrease in membrane resistance.
+The dendrite is modelled as a cylinder, and therefore the greater increase in capacitance with increasing diameter is due to the relationship of
+a cylinders surface area to its diameter.
+By looking at the equations for the surface area of a sphere and a cylinder, we observe that this condition of increasing time constant is true for any cylinder where its
+diameter is less than the length.
 
 # Active properties 
 
@@ -622,9 +629,10 @@ sns.despine()
 plt.show()
 # print(time_np)
 ```
-When we only add sodium channels we see that as current is injected the voltage-gated channels are opened and as a result a sodium spike occurs (just like in a standard AP) after a short period of time the sodium channels inactivate and sodium/current stops flowing.
-However the cell is not brought back to its initial membrane potential – which would normally happen when the voltage-gated potassium channels open.
-Instead it is brought down to -20 mV where some proportion of sodium channels will be activated and some inactivatedmost likely due to potassium leak conductances and inactivation of sodium channels.
+When we only add sodium channels we see that as current is injected the voltage-gated channels are opened and as a result a sodium spike occurs (just like in a standard AP), after a short period of time (1 ms) the sodium channels inactivate and sodium stops flowing.
+The depolarized cell causes potassium to flow out through leak channels causing some repolarisation.
+However the cell is not brought back to its initial membrane potential (-60)– this which would normally happen when the voltage-gated potassium channels open.
+Instead it is brought down to -20 mV where some proportion of sodium channels will be activated and some inactivated (as opposed to before the current injection where most were inactivated) resulting in more flow of sodium ions and membrane potential bringing closer to sodiums reversal potential.
 
 
 ### Only adding K+ voltage-gated channels
@@ -643,8 +651,10 @@ sns.despine()
 plt.show()
 ```
 There is an initial jump before current injection from -70 to -67 which is because we set our initial membrane potential to -70.
-We observe that when current is injected there is a change in membrane potential from -67 to -62, this is before the potassium channels have been activated, then the voltage dips a little once the potassium channels have opened (t = 12 ms) and then when the current injection ends the membrane potential is brought back down -68.
-Thus the potassium channels take a little longer to open but work efficiently to somewhat counteract the current injection in the absence of any sodium channels to drive a fast sodium spike.
+
+When we only have potassium channels in our model we observe that upon current injection there is a change in membrane potential from -67 to -62, this is before the potassium channels have are slow to activate and are not yet open allowing the current injection to slightly depolarize th cell.
+Then the voltage dips a little once the potassium channels open (t = 12 ms) and once the current injection ends (t = 20) the membrane potential is brought back down -68.
+Thus the potassium channels take a little longer to open but work efficiently to somewhat counteract the depolarising current injection in the absence of any sodium channels to drive a fast sodium spike.
 
 ### Adding both Na+ and K+ voltage-gated channels 
 
@@ -662,7 +672,7 @@ ax.set(xlabel='Time (ms)', ylabel='Voltage (V)')
 sns.despine()
 plt.show()
 ```
-We observe the initial step until voltage-gated sodium channels are opened which elicits the sodium spike which is then counteracted by the hyperpolarizing currents conferred by the now open voltage-gated potassium channels.
+We observe the initial step until voltage-gated sodium channels are opened which elicits the sodium spike which is then counteracted by the hyperpolarising currents conferred by the now open voltage-gated potassium channels.
 
 ### Measure gNa and gKv as a function of current injection at the soma and plot activation and inactivation curves 
 
@@ -809,8 +819,8 @@ plt.show()
 ```
 
 We used the voltage clamp configuration to determine the sodium conductances.
-- something about this!
-
+Holding the cell first at a very hyperpolarised voltage we should keep all voltage-gated channels inactivated, we then quickly do a depolarising step of varying sizes and measure the current (here sodium current).
+As can be seen from the plot the most depolarising voltage step also elicits the highest sodium conductance.
 
 
 ```{python, fig.width = 10, fig.height = 7}
@@ -820,7 +830,7 @@ ax.set(xlabel = 'Potential differrence (V)', ylabel = 'Peak conductance ($\mu$S)
 plt.show()
 ```
 The peak sodium condutance plotted against the voltage steps used gives us the activation curve for voltage-gated sodium channels.
-- something about that!
+We can see that as the membrane potential is depolarised more voltage-gated sodium channels are activated.
 
 
 #### Inactivation curve
@@ -878,8 +888,10 @@ ax2.set_ylabel('Conductance ($\mu$S)')
 # plt.legend(frameon = False, title = 'Initial holding voltage \n (mV)')
 plt.show()
 ```
-We also use voltage clamp to determine the changes in sodium conductance, only this time we vary the amplitude of the first clamping voltage.
-- something about this!
+We also use voltage clamp to determine the changes in sodium conductance, only this time we vary the amplitude of the first clamping voltage and keep the voltage step the same for all simulations.
+Now the differences in conductances are determined by how many voltage-gated sodium channels were inactivated during the first step, and therefore are ready to be activated.
+Accordingly, the more hyperpolarised the iniitial step is, the more sodium channels are inactive, and the greater th peak conductance when the depolarising voltage step is introduced.
+
 
 
 ```{python, fig.width = 10, fig.height = 7}
