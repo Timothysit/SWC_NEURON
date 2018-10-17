@@ -1081,7 +1081,8 @@ plt.legend(frameon=False, title = 'Relative distance from \n centre of dendrite 
 plt.show()
 ```
 
-When we record the voltage at the dendrite as the alphasynapse is activated we observe that the size of the voltage change is higher than when the synapse was on near the soma. The high voltage change is due to the dendrites smaller size. 
+When we record the voltage at the dendrite as the alphasynapse is activated we observe that the size of the voltage change is higher than when the synapse was near the soma.
+The high voltage change is due to the dendrites smaller size and thus higher input resistance.
 
 # Appendix 
 
