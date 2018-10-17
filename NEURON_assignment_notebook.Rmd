@@ -289,7 +289,7 @@ So both $R_m$ and $C_m$ change but they cancel each other out resulting in no ne
 
 
 #### Holding all variables except one
-We now calculate $R_i$ and $\tau_m$ in situation varying other parameters.  
+We now calculate $R_i$ and $\tau_m$ in situation varying other parameters.
 
 ```{python}
 # second approach 
@@ -396,6 +396,8 @@ somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10,
 plt.show()
 ```
 
+Above is shown how changing the four different variables effect the membrane voltage.
+This give us a good overview of what is happening in our cell and we now proceed to calculate $R_i$ and $\tau_m$.
 
 
 ```{python, include = FALSE}
@@ -487,10 +489,22 @@ plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
 plt.show()
 ```
+Axial Resistance:
+    Has no effect on $R_i$ nor $\tau_m$ because we have one-compartment model.
+    The axial resistance becomes influential when..
 
+Diameter:
+    Discussed earlier.
 
+Capacitance:
+    Capacitance does not effect the input resistance in this instance because we are changing the capacitance but without changing the cell diameter.
+    Capacitance has an effect on $\tau_m$, because $\tau_m$ = $R_m$*$C_m$.
+    By increasing the capacitance it now takes longer for the capacitor to charge and as a result the time constant is longer because the current flows slower whilst the capacitor is charging.
 
-
+Passive conductances/$R_m$:
+    Increasing the passive conductances decreases the membrane resistance (because R = 1/g) and as mentioned earlier $R_m$ directly affects $R_i$.
+    Reducing the membrane resistance also decreases the time constant as we would expect according to $\tau_m$ = $R_m$*$C_m$.
+    In conclusion as we make our membrane more leaky it becomes "easier" to inject current, and it also takes less time to reach peak voltage (although the voltage change from the same current injection will be lower when we have a lower resistance).
 
 
 ## Adding dendrites and axons with increasing total area
@@ -609,6 +623,10 @@ sns.despine()
 plt.show()
 # print(time_np)
 ```
+When we only add sodium channels we see that as current is injected the voltage-gated channels are opened and as a result a sodium spike occurs (just like in a standard AP) after a short period of time the sodium channels inactivate and sodium/current stops flowing.
+However the cell is not brought back to its initial membrane potential – which would normally happen when the voltage-gated potassium channels open.
+Instead it is brought down to -20 mV most likely due to potassium leak conductances and inactivation of sodium channels.
+
 
 ### Only adding K+ voltage-gated channels
 
@@ -625,6 +643,9 @@ ax.set(xlabel='Time (ms)', ylabel='Voltage (V)')
 sns.despine()
 plt.show()
 ```
+There is an initial jump before current injection from -70 to -67 which is because we set our initial membrane potential to -70.
+We observe that when current is injected there is a change in membrane potential from -67 to -62, this is before the potassium channels have been activated, then the voltage dips a little once the potassium channels have opened (t = 12 ms) and then when the current injection ends the membrane potential is brought back down -68.
+Thus the potassium channels take a little longer to open but work efficiently to somewhat counteract the current injection in the absence of any sodium channels to drive a fast sodium spike.
 
 ### Adding both Na+ and K+ voltage-gated channels 
 
@@ -642,6 +663,7 @@ ax.set(xlabel='Time (ms)', ylabel='Voltage (V)')
 sns.despine()
 plt.show()
 ```
+We observe the initial step until voltage-gated sodium channels are opened which elicits the sodium spike which is then counteracted by the hyperpolarizing currents conferred by the now open voltage-gated potassium channels.
 
 ### Measure gNa and gKv as a function of current injection at the soma and plot activation and inactivation curves 
 
@@ -787,13 +809,19 @@ plt.show()
 
 ```
 
+We used the voltage clamp configuration to determine the sodium conductances.
+- something about this!
+
+
+
 ```{python, fig.width = 10, fig.height = 7}
 plt.figure()
 ax = sns.lineplot(v_clamp_amp2_list, gKv_measured)
 ax.set(xlabel = 'Potential differrence (V)', ylabel = 'Peak conductance ($\mu$S)')
 plt.show()
 ```
-
+The peak sodium condutance plotted against the voltage steps used gives us the activation curve for voltage-gated sodium channels.
+- something about that!
 
 
 #### Inactivation curve
@@ -851,6 +879,9 @@ ax2.set_ylabel('Conductance ($\mu$S)')
 # plt.legend(frameon = False, title = 'Initial holding voltage \n (mV)')
 plt.show()
 ```
+We also use voltage clamp to determine the changes in sodium conductance, only this time we vary the amplitude of the first clamping voltage.
+- something about this!
+
 
 ```{python, fig.width = 10, fig.height = 7}
 plt.figure()
@@ -878,7 +909,7 @@ sns.despine()
 plt.show()
 ```
 
-# Syanptic integration 
+# Synaptic integration
 
 
 ## Add a single alpha excitatory synapse in the soma and then in the dendrite
@@ -1017,8 +1048,8 @@ plt.ylabel('Deploarising change in potential difference (mV)')
 plt.xlabel('Distance from the soma (au)')
 plt.show()
 ```
-
-As expected we see that the amplitude of the voltage change elicted by the alphasynapse decreases with distance due to the passive properties of the cell. As a result when the alphasynapse is further away from the some the depolarising change recorded as the soma is smaller then when it is closer to the soma.
+The amplitude of the voltage change elicted by the alphasynapse decreases with distance due to the passive properties of the cell (axial resistance combined with a leaky membrane).
+As a result when the alphasynapse is further away from the soma the depolarising change recorded at the soma is smaller, because the signal attenuates as it travels along the dendrite.
 
 ## Record at the dendrite where the synapse is whilst moving the alpha synapse progressively far away
 
