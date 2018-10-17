@@ -490,8 +490,7 @@ plt.subplots_adjust(hspace = 0.5, wspace = 0.5)
 plt.show()
 ```
 Axial Resistance:
-    Has no effect on $R_i$ nor $\tau_m$ because we have one-compartment model.
-    The axial resistance becomes influential when..
+    Has no effect on $R_i$ nor $\tau_m$ because we have a one-compartment model.
 
 Diameter:
     Discussed earlier.
@@ -499,10 +498,10 @@ Diameter:
 Capacitance:
     Capacitance does not effect the input resistance in this instance because we are changing the capacitance but without changing the cell diameter.
     Capacitance has an effect on $\tau_m$, because $\tau_m$ = $R_m$*$C_m$.
-    By increasing the capacitance it now takes longer for the capacitor to charge and as a result the time constant is longer because the current flows slower whilst the capacitor is charging.
+    By increasing the capacitance it now takes longer for the capacitor to charge and as a result the time constant is longer because the less current flows through the resistor whilst the capacitor is charging.
 
 Passive conductances/$R_m$:
-    Increasing the passive conductances decreases the membrane resistance (because R = 1/g) and as mentioned earlier $R_m$ directly affects $R_i$.
+    Increasing the passive conductances decreases the membrane resistance (because $R_m$ = 1/g) and as mentioned earlier $R_m$ directly affects $R_i$.
     Reducing the membrane resistance also decreases the time constant as we would expect according to $\tau_m$ = $R_m$*$C_m$.
     In conclusion as we make our membrane more leaky it becomes "easier" to inject current, and it also takes less time to reach peak voltage (although the voltage change from the same current injection will be lower when we have a lower resistance).
 
@@ -625,7 +624,7 @@ plt.show()
 ```
 When we only add sodium channels we see that as current is injected the voltage-gated channels are opened and as a result a sodium spike occurs (just like in a standard AP) after a short period of time the sodium channels inactivate and sodium/current stops flowing.
 However the cell is not brought back to its initial membrane potential – which would normally happen when the voltage-gated potassium channels open.
-Instead it is brought down to -20 mV most likely due to potassium leak conductances and inactivation of sodium channels.
+Instead it is brought down to -20 mV where some proportion of sodium channels will be activated and some inactivatedmost likely due to potassium leak conductances and inactivation of sodium channels.
 
 
 ### Only adding K+ voltage-gated channels
@@ -1048,7 +1047,7 @@ plt.ylabel('Deploarising change in potential difference (mV)')
 plt.xlabel('Distance from the soma (au)')
 plt.show()
 ```
-The amplitude of the voltage change elicted by the alphasynapse decreases with distance due to the passive properties of the cell (axial resistance combined with a leaky membrane).
+The amplitude of the voltage change elicted by the alphasynapse decreases with distance due to the passive properties of the cell, (axial resistance combined with a leaky membrane).
 As a result when the alphasynapse is further away from the soma the depolarising change recorded at the soma is smaller, because the signal attenuates as it travels along the dendrite.
 
 ## Record at the dendrite where the synapse is whilst moving the alpha synapse progressively far away
@@ -1080,9 +1079,8 @@ plt.legend(frameon=False, title = 'Relative distance from \n centre of dendrite 
            loc = 'upper right')
 plt.show()
 ```
-
-When we record the voltage at the dendrite as the alphasynapse is activated we observe that the size of the voltage change is higher than when the synapse was near the soma.
-The high voltage change is due to the dendrites smaller size and thus higher input resistance.
+When we record the voltage at the dendrite as the alphasynapse is activated we observe that the amplitude of the voltage change is higher than when the synapse was on the soma.
+The higher voltage change is due to the dendrites smaller size and thus higher input resistance.
 
 # Appendix 
 
