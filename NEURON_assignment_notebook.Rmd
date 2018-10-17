@@ -127,7 +127,7 @@ def inject_current(cell, somaLength = 12.54, somaDiam = 12.54,
     return voltage, time
 ```
 
-We define a function (using Ohms law) which allows us to calculate the input resistance ($R_i$) from our cell recording using the returned voltage vector.
+We define a function (using Ohms law) which allows us to calculate the input resistance ($R_i$) from our cell recording using the returned voltage vector and the known amplitude of our current injection.
 
 $$
 R_i = \frac{\Delta V}{\Delta I_e}
@@ -178,7 +178,8 @@ def cal_TauM(voltage, time, stimDelay = 10):
     return TauM[0]
 ```
 
-We run our current injection function on a cell which only contains a soma. According to the default settings of our function the soma diameter and length are the same, creating a ball. Below is a plot of the voltage recorded during current injection into our ball model.
+We run our current injection function on a cell which only contains a soma. According to the default settings of our function the soma diameter and length are the same, creating a ball.
+Below is a plot of the voltage recorded during current injection into our ball model, which has the expected waveform of a cell with passive properties.
 
 ```{python, fig.width=10, fig.height = 7}
 voltage, time = inject_current(cell = h.Section(name='soma'))
@@ -201,14 +202,16 @@ print('Input resistance is %.2f Mohms' % (input_resistance / 10**6))
 TauM = cal_TauM(voltage, time)
 print('TauM is %.2f ms' % TauM)
 ```
-Due to the cells small size the input resistance is greater than we would normally expect. During our in vitro experiments this week we measured our input resistance to be around 5 Mohms. Equally, the time constant differs from our experimental observations (in our experiment the time constant ~20 ms). This is because the time constant is a product of the resistance and capacitance of the cell, and the membrane capacitance is proportional to the amount of membrane.
+The input resistance in our cell is quite high because our cell is rather small. During our in vitro experiments this week we measured our input resistance to be around 5 Mohms.
+Our calculated time constant is 1 ms, this correlates well with the observed voltage change plotted above.
 
 
 ## Varying neuron variables
 
 Change diameter, $R_m$, $R_a$, $C_m$ and see how it affects $R_i$ and $m_\tau$
 
-We generate lists containing different values for the above mentioned variables. We first show how changes in diameter length effect the recorded voltage and then the effects of diameter on $R_i$ and $m_\tau$.
+We generate lists containing different values for the above mentioned variables.
+We first show how changes in diameter effect the recorded voltage, and then the effects of diameter on $R_i$ and $\tau_m$.
 
 ```{python, fig.width=10, fig.height = 7}
 g_list = [0.001, 0.01, 0.1, 1, 10]
@@ -249,7 +252,8 @@ plt.legend(frameon=False, title = 'Diameter ($\mu$m)')
 plt.show()
 ```
 
-From the above plot we can see that the voltage change following current injection is larger in a cell with a smaller diameter. This also means that according to Ohms law we will expect the cell with the smallest diameter to have the largest $R_i$.
+From the above plot we can see that the voltage change following current injection is larger in a cell with a smaller diameter.
+We will thus expect (according to Ohms law) that the cell with the smallest diameter will have the largest $R_i$, resulting in a larger voltage change.
 
 ### Variation of input resistance and time constant with diameter
 
@@ -270,12 +274,22 @@ plt.ylabel('Time constant (ms)')
 
 plt.show() 
 ```
-Indeed we observe that the $R_i$ decreases with increasing diameter.
-When we increase the diameter the capacitance of the cell increases proportionally, however the input resistance decreases (as shown above) which means that the time constant (which is the product of membrane capacitance and resistance) is unaffected.
+
+Indeed we observe that the $R_i$ is highest in the cell with the smallest diameter, and decreases as diameter increases.
+
+Diameter however does not have an effect on $\tau_m$.
+When we increase the diameter we increase our total amount of membrane and as a consequence the capacitance of the cell increases proportionally.
+We also know that membrane resistance is dependent on area and input resistance since:
+$$
+R_i = \frac{R_m}{\A}
+$$
+As illustrated above the $R_i$ decreases with increased diameter, and as a consequence $R_m$ also decreases when we make the cell larger.
+So both $R_m$ and $C_m$ change but they cancel each other out resulting in no net change in the time constant.
 
 
 
-#### Holding all variables except one 
+#### Holding all variables except one
+We now calculate $R_i$ and $\tau_m$ in situation varying other parameters.  
 
 ```{python}
 # second approach 
