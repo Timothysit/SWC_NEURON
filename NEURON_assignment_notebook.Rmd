@@ -276,170 +276,8 @@ When we increase the diameter the capacitance of the cell increases proportional
 
 We iterate through each of these list, running our simulations and calculating input resistance and time constants as above.
 
-```{python}
-import itertools
-import pandas as pd
-# variable lists
-diam_list = [3, 6, 9, 12, 15]
-Cm_list = [0.1, 0.3, 0.6, 1.0, 1.3]
-Ri_list = list()
-mTau_list = list()
-
-# using ranges 
-Ra_list = np.arange(10, 50, 2)
-Cm_list = np.arange(0.1, 1.3, 0.1)
 
 
-# varying all 3 variables
-# variableCart, variableIter = itertools.tee(
-# itertools.product(Ra_list, diam_list, Cm_list))
-# cartesian product of the variables
-# using tee to make two copies of the same iterator so I can use it twice
-
-# varying just 2 variables 
-diam = 3
-variableCart, variableIter = itertools.tee(itertools.product(Ra_list, Cm_list))
-
-
-# df = pd.DataFrame(list(variableCart),
-#                   columns = ['Ra', 'Diam', 'Cm'])
-
-df = pd.DataFrame(list(variableCart),
-                  columns = ['Ra', 'Cm'])
-
-for var_list in variableIter:
-    cell = h.Section(name = 'cell')
-    # 3 variables
-    # cell.Ra = var_list[0] # axial resistance
-    # diam = var_list[1]
-    # cell.cm = var_list[2]
-    
-    # 2 variables 
-    cell.Ra = var_list[0]
-    cell.cm = var_list[1]
-    diam = 50000 # default to 500
-    
-    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
-somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
-    Ri_list.append(cal_Ri(voltage))
-    mTau_list.append(cal_TauM(voltage, time))
-
-df['Ri'] = Ri_list
-df['mTau'] = mTau_list
-    
-# print preview of the table
-# df
-```
-
-```{python, fig.width = 10, fig.height = 7}
-# 3D surface plot to show the effect of the 2 variables on input resistance 
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-
-# Make the plot
-fig = plt.figure(figsize=(8, 6))
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-ax.plot_trisurf(df['Ra'], df['Cm'], df['Ri'], cmap=plt.cm.viridis, linewidth=0.2)
-ax.set(xlabel='Axial resistance ($\Omega$)', 
-       ylabel='Membrane capicitance ($\mu$F/cm$^2$)',
-      zlabel = 'Input resistance ($\Omega$)')
-# plt.show()
- 
-# to Add a color bar which maps values to colors.
-surf=ax.plot_trisurf(df['Ra'], df['Cm'], df['Ri'], cmap=plt.cm.viridis, linewidth=0.2)
-# fig.colorbar(surf, shrink=0.5, aspect=5) # toggle colorbar
-# plt.show()
-
-# padding for axis 
-ax.xaxis.labelpad = 20
-ax.yaxis.labelpad = 20
-ax.zaxis.labelpad = 20
-
-# padding for tick mark 
-ax.tick_params(axis = 'z', pad = 10)
-
-# Rotate it
-ax.view_init(45, 45)
-plt.show()
-```
-
-```{python, fig.width = 10, fig.height = 7}
-Cm_list = np.arange(0.1, 2, 0.1)
-diam_list = np.arange(250, 252, 0.1) # default diam = 500
-
-# lists to store input resistance and time constant
-Ri_list = list()
-mTau_list = list()
-
-
-variableCart, variableIter = itertools.tee(itertools.product(Cm_list, diam_list))
-
-df = pd.DataFrame(list(variableCart),
-                  columns = ['Capacitance', 'Diameter'])
-
-for var_list in variableIter:
-    cell = h.Section(name = 'cell')
-    
-    # 2 variables 
-    # cell.insert('pas')
-    # cell.g_pas = var_list[0]
-    # diam = var_list[1]
-    
-    cell.cm = var_list[0] # default capacitance 
-    cell.Ra = 35.4 # default axial resistance
-    diam = var_list[1]
-    
-    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
-somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
-    Ri_list.append(cal_Ri(voltage))
-    mTau_list.append(cal_TauM(voltage, time))
-
-df['Ri'] = Ri_list
-df['mTau'] = mTau_list
-
-# 3D surface plot to show the effect of the 2 variables on input resistance 
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-
-# Make the plot
-# fig = plt.figure(figsize=(8, 6), dpi = 300)
-fig = plt.figure(figsize=(10, 7))
-ax = fig.gca(projection='3d')
-ax.plot_trisurf(df['Capacitance'], df['Diameter'], df['Ri'], 
-                cmap=plt.cm.viridis, linewidth=0,
-                edgecolor='none',
-                antialiased=True)
-ax.set(xlabel='Capacitance ($\mu$F/cm$^2$)', ylabel='Diameter ($\mu$ m)',
-      zlabel = 'Input resistance ($\Omega$)')
-# plt.show()
- 
-# to Add a color bar which maps values to colors.
-# surf=ax.plot_trisurf(df['Capacitance'], df['Diameter'], df['Ri'], 
-#                      cmap=plt.cm.viridis, linewidth=0.2)
-# fig.colorbar(surf, shrink=0.5, aspect=5)
-# plt.show()
-
-# padding for axis 
-ax.xaxis.labelpad = 20
-ax.yaxis.labelpad = 20
-ax.zaxis.labelpad = 20
-
-# change the label so it doens't overlap
-ax.set_zlabel(zlabel='$R_i$')
-
-# padding for tick marks
-ax.ticklabel_format(axis = 'z', style = 'sci', scilimits = [0, 0])
-ax.tick_params(axis = 'z', pad = 10)
- 
-# Rotate it
-ax.view_init(45, 45)
-plt.show()
-```
 
 #### Holding all variables except one 
 
@@ -603,7 +441,7 @@ plt.plot(Cm_list, Ri_Cm_list)
 plt.xlabel('Capacitance ($\mu$F)')
 plt.ylabel('Input resistance ($\Omega$)')
 # plt.ylim([1 * (10 ** 8), 2 * (10 ** 8)])
-# plt.ylim([3 * 10**6, 5 * 10**6])
+plt.ylim([5 * 10**6, 5.5 * 10**6])
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
 plt.subplot(4, 2, 7) 
@@ -643,68 +481,6 @@ plt.show()
 
 
 
-```{python, fig.width = 12, fig.height = 14}
-# based on: https://matplotlib.org/gallery/ticks_and_spines/multiple_yaxis_with_spines.html
-# but instead of twinx, I am using twiny, and so the top rather than right axis is reset
-import matplotlib.pyplot as plt
-
-aesthetics(font_scale = 2, line_width = 3) # 2, 3
-
-def make_patch_spines_invisible(ax):
-    ax.set_frame_on(True)
-    ax.patch.set_visible(False)
-    for sp in ax.spines.values():
-        sp.set_visible(False)
-
-
-fig, host = plt.subplots()
-fig.subplots_adjust(right=0.75)
-
-par1 = host.twiny()
-par2 = host.twiny()
-
-# Offset the right spine of par2.  The ticks and label have already been
-# placed on the right by twinx above.
-# par2.spines["right"].set_position(("axes", 1.2))
-par2.xaxis.set_ticks_position('bottom') # set the position of the second x-axis to bottom
-par2.xaxis.set_label_position('bottom') # set the position of the second x-axis to bottom
-
-par2.spines["bottom"].set_position(('axes', -0.2))
-
-# Having been created by twinx, par2 has its frame off, so the line of its
-# detached spine is invisible.  First, activate the frame but make the patch
-# and spines invisible.
-make_patch_spines_invisible(par2)
-
-# Second, show the right spine.
-# par2.spines["right"].set_visible(True)
-par2.spines["bottom"].set_visible(True)
-
-p1, = host.plot(Ra_list, Ri_Ra_list, "b-", label="Axial resistance")
-p2, = par1.plot(diam_list, Ri_diam_list, "r-", label="Diameter")
-p3, = par2.plot(Cm_list, Ri_Cm_list, "g-", label="Membrane capacitance")
-
-host.set_xlabel("Axial resistance ($\Omega$)")
-host.set_ylabel("Input resistance ($\Omega$)")
-par1.set_xlabel('Diameter ($\mu$m)')
-par2.set_xlabel('Capacitance ($\mu$F)')
-
-host.xaxis.label.set_color(p1.get_color())
-par1.xaxis.label.set_color(p2.get_color())
-par2.xaxis.label.set_color(p3.get_color())
-
-tkw = dict(size=4, width=1.5)
-host.tick_params(axis='x', colors=p1.get_color(), **tkw)
-par1.tick_params(axis='x', colors=p2.get_color(), **tkw)
-par2.tick_params(axis='x', colors=p3.get_color(), **tkw)
-host.tick_params(axis='y', **tkw)
-
-lines = [p1, p2, p3]
-
-host.legend(lines, [l.get_label() for l in lines], frameon = False)
-plt.subplots_adjust(bottom = 0.5) # adjust bottom margin to show second bottom x-axis
-plt.show()
-```
 
 
 ## Adding dendrites and axons with increasing total area
@@ -1265,4 +1041,240 @@ plt.show()
 ```
 
 When we record the voltage at the dendrite as the alphasynapse is activated we observe that the size of the voltage change is higher than when the synapse was on near the soma. The high voltage change is due to the dendrites smaller size. 
+
+# Appendix 
+
+## Varying multiple variables simultaneously 
+
+```{python, eval = FALSE}
+import itertools
+import pandas as pd
+# variable lists
+diam_list = [3, 6, 9, 12, 15]
+Cm_list = [0.1, 0.3, 0.6, 1.0, 1.3]
+Ri_list = list()
+mTau_list = list()
+
+# using ranges 
+Ra_list = np.arange(10, 50, 2)
+Cm_list = np.arange(0.1, 1.3, 0.1)
+
+
+# varying all 3 variables
+# variableCart, variableIter = itertools.tee(
+# itertools.product(Ra_list, diam_list, Cm_list))
+# cartesian product of the variables
+# using tee to make two copies of the same iterator so I can use it twice
+
+# varying just 2 variables 
+diam = 3
+variableCart, variableIter = itertools.tee(itertools.product(Ra_list, Cm_list))
+
+
+# df = pd.DataFrame(list(variableCart),
+#                   columns = ['Ra', 'Diam', 'Cm'])
+
+df = pd.DataFrame(list(variableCart),
+                  columns = ['Ra', 'Cm'])
+
+for var_list in variableIter:
+    cell = h.Section(name = 'cell')
+    # 3 variables
+    # cell.Ra = var_list[0] # axial resistance
+    # diam = var_list[1]
+    # cell.cm = var_list[2]
+    
+    # 2 variables 
+    cell.Ra = var_list[0]
+    cell.cm = var_list[1]
+    diam = 50000 # default to 500
+    
+    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
+somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
+    Ri_list.append(cal_Ri(voltage))
+    mTau_list.append(cal_TauM(voltage, time))
+
+df['Ri'] = Ri_list
+df['mTau'] = mTau_list
+    
+# print preview of the table
+# df
+```
+
+```{python, fig.width = 10, fig.height = 7, eval = FALSE}
+Cm_list = np.arange(0.1, 2, 0.1)
+diam_list = np.arange(250, 252, 0.1) # default diam = 500
+
+# lists to store input resistance and time constant
+Ri_list = list()
+mTau_list = list()
+
+
+variableCart, variableIter = itertools.tee(itertools.product(Cm_list, diam_list))
+
+df = pd.DataFrame(list(variableCart),
+                  columns = ['Capacitance', 'Diameter'])
+
+for var_list in variableIter:
+    cell = h.Section(name = 'cell')
+    
+    # 2 variables 
+    # cell.insert('pas')
+    # cell.g_pas = var_list[0]
+    # diam = var_list[1]
+    
+    cell.cm = var_list[0] # default capacitance 
+    cell.Ra = 35.4 # default axial resistance
+    diam = var_list[1]
+    
+    voltage, time = inject_current(cell = cell, somaLength = 12.6157,
+somaDiam = diam, stimDur = 10, stimAmp = 0.05, stimDelay = 10)
+    Ri_list.append(cal_Ri(voltage))
+    mTau_list.append(cal_TauM(voltage, time))
+
+df['Ri'] = Ri_list
+df['mTau'] = mTau_list
+
+# 3D surface plot to show the effect of the 2 variables on input resistance 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+# Make the plot
+# fig = plt.figure(figsize=(8, 6), dpi = 300)
+fig = plt.figure(figsize=(10, 7))
+ax = fig.gca(projection='3d')
+ax.plot_trisurf(df['Capacitance'], df['Diameter'], df['Ri'], 
+                cmap=plt.cm.viridis, linewidth=0,
+                edgecolor='none',
+                antialiased=True)
+ax.set(xlabel='Capacitance ($\mu$F/cm$^2$)', ylabel='Diameter ($\mu$ m)',
+      zlabel = 'Input resistance ($\Omega$)')
+# plt.show()
+ 
+# to Add a color bar which maps values to colors.
+# surf=ax.plot_trisurf(df['Capacitance'], df['Diameter'], df['Ri'], 
+#                      cmap=plt.cm.viridis, linewidth=0.2)
+# fig.colorbar(surf, shrink=0.5, aspect=5)
+# plt.show()
+
+# padding for axis 
+ax.xaxis.labelpad = 20
+ax.yaxis.labelpad = 20
+ax.zaxis.labelpad = 20
+
+# change the label so it doens't overlap
+ax.set_zlabel(zlabel='$R_i$')
+
+# padding for tick marks
+ax.ticklabel_format(axis = 'z', style = 'sci', scilimits = [0, 0])
+ax.tick_params(axis = 'z', pad = 10)
+ 
+# Rotate it
+ax.view_init(45, 45)
+plt.show()
+```
+
+```{python, fig.width = 10, fig.height = 7, eval = FALSE}
+# 3D surface plot to show the effect of the 2 variables on input resistance 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+# Make the plot
+fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.plot_trisurf(df['Ra'], df['Cm'], df['Ri'], cmap=plt.cm.viridis, linewidth=0.2)
+ax.set(xlabel='Axial resistance ($\Omega$)', 
+       ylabel='Membrane capicitance ($\mu$F/cm$^2$)',
+      zlabel = 'Input resistance ($\Omega$)')
+# plt.show()
+ 
+# to Add a color bar which maps values to colors.
+surf=ax.plot_trisurf(df['Ra'], df['Cm'], df['Ri'], cmap=plt.cm.viridis, linewidth=0.2)
+# fig.colorbar(surf, shrink=0.5, aspect=5) # toggle colorbar
+# plt.show()
+
+# padding for axis 
+ax.xaxis.labelpad = 20
+ax.yaxis.labelpad = 20
+ax.zaxis.labelpad = 20
+
+# padding for tick mark 
+ax.tick_params(axis = 'z', pad = 10)
+
+# Rotate it
+ax.view_init(45, 45)
+plt.show()
+```
+
+
+## Holding all variables except one
+
+```{python, fig.width = 12, fig.height = 14, eval = FALSE}
+# based on: https://matplotlib.org/gallery/ticks_and_spines/multiple_yaxis_with_spines.html
+# but instead of twinx, I am using twiny, and so the top rather than right axis is reset
+import matplotlib.pyplot as plt
+
+aesthetics(font_scale = 2, line_width = 3) # 2, 3
+
+def make_patch_spines_invisible(ax):
+    ax.set_frame_on(True)
+    ax.patch.set_visible(False)
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+
+
+fig, host = plt.subplots()
+fig.subplots_adjust(right=0.75)
+
+par1 = host.twiny()
+par2 = host.twiny()
+
+# Offset the right spine of par2.  The ticks and label have already been
+# placed on the right by twinx above.
+# par2.spines["right"].set_position(("axes", 1.2))
+par2.xaxis.set_ticks_position('bottom') # set the position of the second x-axis to bottom
+par2.xaxis.set_label_position('bottom') # set the position of the second x-axis to bottom
+
+par2.spines["bottom"].set_position(('axes', -0.2))
+
+# Having been created by twinx, par2 has its frame off, so the line of its
+# detached spine is invisible.  First, activate the frame but make the patch
+# and spines invisible.
+make_patch_spines_invisible(par2)
+
+# Second, show the right spine.
+# par2.spines["right"].set_visible(True)
+par2.spines["bottom"].set_visible(True)
+
+p1, = host.plot(Ra_list, Ri_Ra_list, "b-", label="Axial resistance")
+p2, = par1.plot(diam_list, Ri_diam_list, "r-", label="Diameter")
+p3, = par2.plot(Cm_list, Ri_Cm_list, "g-", label="Membrane capacitance")
+
+host.set_xlabel("Axial resistance ($\Omega$)")
+host.set_ylabel("Input resistance ($\Omega$)")
+par1.set_xlabel('Diameter ($\mu$m)')
+par2.set_xlabel('Capacitance ($\mu$F)')
+
+host.xaxis.label.set_color(p1.get_color())
+par1.xaxis.label.set_color(p2.get_color())
+par2.xaxis.label.set_color(p3.get_color())
+
+tkw = dict(size=4, width=1.5)
+host.tick_params(axis='x', colors=p1.get_color(), **tkw)
+par1.tick_params(axis='x', colors=p2.get_color(), **tkw)
+par2.tick_params(axis='x', colors=p3.get_color(), **tkw)
+host.tick_params(axis='y', **tkw)
+
+lines = [p1, p2, p3]
+
+host.legend(lines, [l.get_label() for l in lines], frameon = False)
+plt.subplots_adjust(bottom = 0.5) # adjust bottom margin to show second bottom x-axis
+plt.show()
+```
+
 
